@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão Hospitalar</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 Sistema de Gestão Hospitalar</h1>
+            <p class="subtitle">Triagem e Atendimento com Estruturas de Dados</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Painel de Cadastro de Pacientes -->
+            <section class="panel">
+                <h2>📋 Cadastro de Pacientes</h2>
+                <form id="patient-form">
+                    <div class="form-group">
+                        <label for="patient-name">Nome do Paciente:</label>
+                        <input type="text" id="patient-name" required placeholder="Digite o nome">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-priority">Prioridade (1-5):</label>
+                        <select id="patient-priority" required>
+                            <option value="1">1 - Emergência (Mais Urgente)</option>
+                            <option value="2">2 - Muito Urgente</option>
+                            <option value="3">3 - Urgente</option>
+                            <option value="4">4 - Pouco Urgente</option>
+                            <option value="5">5 - Não Urgente</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cadastrar Paciente</button>
+                </form>
+            </section>
+
+            <!-- Painel de Cadastro de Médicos -->
+            <section class="panel">
+                <h2>👨‍⚕️ Cadastro de Médicos</h2>
+                <form id="doctor-form">
+                    <div class="form-group">
+                        <label for="doctor-name">Nome do Médico:</label>
+                        <input type="text" id="doctor-name" required placeholder="Digite o nome">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cadastrar Médico</button>
+                </form>
+            </section>
+
+            <!-- Painel de Operações -->
+            <section class="panel">
+                <h2>⚙️ Operações</h2>
+                <div class="operations-grid">
+                    <div class="operation-group">
+                        <h3>Consulta por ID</h3>
+                        <div class="form-inline">
+                            <input type="number" id="search-id" placeholder="ID do paciente">
+                            <button onclick="searchPatient()" class="btn btn-secondary">Buscar</button>
+                        </div>
+                        <div id="search-result"></div>
+                    </div>
+                    <div class="operation-group">
+                        <h3>Reclassificar</h3>
+                        <div class="form-inline">
+                            <input type="number" id="reclassify-id" placeholder="ID do paciente">
+                            <select id="reclassify-priority">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <button onclick="reclassifyPatient()" class="btn btn-secondary">Reclassificar</button>
+                        </div>
+                    </div>
+                    <div class="operation-group">
+                        <h3>Cancelar</h3>
+                        <div class="form-inline">
+                            <input type="number" id="cancel-id" placeholder="ID do paciente">
+                            <button onclick="cancelPatient()" class="btn btn-danger">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Painel de Atendimento -->
+            <section class="panel">
+                <h2>🩺 Atendimento</h2>
+                <div class="attendance-controls">
+                    <button onclick="callNextPatient()" class="btn btn-success btn-large">Chamar Próximo Paciente</button>
+                    <div id="attendance-info"></div>
+                    <div class="conclude-section">
+                        <input type="number" id="conclude-id" placeholder="ID do paciente em atendimento">
+                        <button onclick="concludeAttendance()" class="btn btn-primary">Concluir Atendimento</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Painel de Visualização de Estruturas -->
+            <section class="panel full-width">
+                <h2>📊 Visualização das Estruturas de Dados</h2>
+                <div class="structures-grid">
+                    <!-- Tabela Hash -->
+                    <div class="structure-box">
+                        <h3>Tabela Hash</h3>
+                        <div class="stats">
+                            <span id="hash-size">Tamanho: 0</span>
+                            <span id="hash-capacity">Capacidade: 10</span>
+                            <span id="hash-load-factor">Fator de Carga: 0.00</span>
+                        </div>
+                        <div id="hash-buckets" class="buckets-container"></div>
+                    </div>
+
+                    <!-- Árvore Rubro-Negra -->
+                    <div class="structure-box">
+                        <h3>Árvore Rubro-Negra</h3>
+                        <div class="stats">
+                            <span id="tree-size">Tamanho: 0</span>
+                            <span id="tree-height">Altura Negra: 0</span>
+                        </div>
+                        <div id="tree-visualization" class="tree-container"></div>
+                    </div>
+
+                    <!-- Heap de Pacientes -->
+                    <div class="structure-box">
+                        <h3>Heap de Pacientes</h3>
+                        <div class="stats">
+                            <span id="patient-heap-size">Tamanho: 0</span>
+                        </div>
+                        <div id="patient-heap" class="heap-container"></div>
+                    </div>
+
+                    <!-- Heap de Médicos -->
+                    <div class="structure-box">
+                        <h3>Heap de Médicos</h3>
+                        <div class="stats">
+                            <span id="doctor-heap-size">Tamanho: 0</span>
+                        </div>
+                        <div id="doctor-heap" class="heap-container"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Painel de Listas -->
+            <section class="panel full-width">
+                <h2>📑 Listas</h2>
+                <div class="lists-grid">
+                    <div class="list-box">
+                        <h3>Fila por Prioridade</h3>
+                        <div id="priority-queue" class="list-container"></div>
+                    </div>
+                    <div class="list-box">
+                        <h3>Ordem de Chegada</h3>
+                        <div id="arrival-list" class="list-container"></div>
+                    </div>
+                    <div class="list-box">
+                        <h3>Médicos Disponíveis</h3>
+                        <div id="doctors-list" class="list-container"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Painel de Validação -->
+            <section class="panel">
+                <h2>✅ Validação e Testes</h2>
+                <div class="validation-controls">
+                    <button onclick="validateSystem()" class="btn btn-secondary">Validar Estruturas</button>
+                    <button onclick="testCollision()" class="btn btn-secondary">Teste de Colisão</button>
+                    <button onclick="resetSystem()" class="btn btn-danger">Resetar Sistema</button>
+                </div>
+                <div id="validation-result"></div>
+            </section>
+        </div>
+
+        <footer>
+            <p>Sistema de Gestão Hospitalar - Estruturas de Dados</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
