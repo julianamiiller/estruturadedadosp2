@@ -143,6 +143,16 @@ class HashTable:
                 node = node.next
         return keys
     
+    def get_all_values(self):
+        """Retorna todos os valores armazenados."""
+        values = []
+        for i in range(self.capacity):
+            node = self.buckets[i]
+            while node:
+                values.append(node.value)
+                node = node.next
+        return values
+    
     def get_stats(self):
         """Retorna estatísticas da tabela hash."""
         collisions = sum(1 for bucket in self.buckets if bucket is not None)

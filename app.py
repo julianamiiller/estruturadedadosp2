@@ -25,7 +25,13 @@ def index():
 @app.route('/api/patients', methods=['POST'])
 def register_patient():
     """Cadastra um novo paciente."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Content-Type deve ser application/json'}), 400
+    
     data = request.json
+    if not data:
+        return jsonify({'success': False, 'error': 'Dados JSON inválidos'}), 400
+    
     name = data.get('name')
     priority = data.get('priority')
     
@@ -39,9 +45,27 @@ def register_patient():
     return jsonify(result), 400
 
 
+@app.route('/api/patients/search', methods=['GET'])
+def search_patients():
+    """Busca pacientes por ID ou Nome."""
+    query = request.args.get('q') or request.args.get('name')
+    if not query:
+        return jsonify({'success': False, 'error': 'Parâmetro de busca "q" ou "name" é obrigatório'}), 400
+    
+    results = hospital_service.search_patients(query)
+    return jsonify({
+        'success': True,
+        'count': len(results),
+        'patients': results
+    }), 200
+
+
 @app.route('/api/patients/<int:patient_id>', methods=['GET'])
 def get_patient(patient_id):
     """Busca um paciente por ID."""
+    if patient_id <= 0:
+        return jsonify({'success': False, 'error': 'ID inválido'}), 400
+    
     patient = hospital_service.find_patient_by_id(patient_id)
     
     if patient:
@@ -52,7 +76,16 @@ def get_patient(patient_id):
 @app.route('/api/patients/<int:patient_id>/reclassify', methods=['PUT'])
 def reclassify_patient(patient_id):
     """Reclassifica a prioridade de um paciente."""
+    if patient_id <= 0:
+        return jsonify({'success': False, 'error': 'ID inválido'}), 400
+    
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Content-Type deve ser application/json'}), 400
+    
     data = request.json
+    if not data:
+        return jsonify({'success': False, 'error': 'Dados JSON inválidos'}), 400
+    
     new_priority = data.get('priority')
     
     if new_priority is None:
@@ -92,7 +125,13 @@ def get_patient_queue():
 @app.route('/api/doctors', methods=['POST'])
 def register_doctor():
     """Cadastra um novo médico."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Content-Type deve ser application/json'}), 400
+    
     data = request.json
+    if not data:
+        return jsonify({'success': False, 'error': 'Dados JSON inválidos'}), 400
+    
     name = data.get('name')
     
     if not name:
@@ -103,6 +142,35 @@ def register_doctor():
     if result['success']:
         return jsonify(result), 201
     return jsonify(result), 400
+
+
+@app.route('/api/doctors', methods=['GET'])
+def list_all_doctors():
+    """Retorna todos os médicos cadastrados com status de disponibilidade."""
+    doctors = hospital_service.get_all_doctors()
+    return jsonify({'success': True, 'doctors': doctors}), 200
+
+
+@app.route('/api/doctors/<int:doctor_id>', methods=['GET'])
+def get_doctor_by_id(doctor_id):
+    """Busca médico por ID e verifica status."""
+    result = hospital_service.check_doctor_availability(doctor_id)
+    if result['success']:
+        return jsonify(result), 200
+    return jsonify(result), 404
+
+
+@app.route('/api/doctors/check', methods=['GET'])
+def check_doctor_availability():
+    """Verifica disponibilidade de um médico específico por nome ou ID."""
+    query = request.args.get('query') or request.args.get('q') or request.args.get('name') or request.args.get('id')
+    if not query:
+        return jsonify({'success': False, 'error': 'Parâmetro "query", "name" ou "id" é obrigatório'}), 400
+    
+    result = hospital_service.check_doctor_availability(query)
+    if result['success']:
+        return jsonify(result), 200
+    return jsonify(result), 404
 
 
 @app.route('/api/doctors/available', methods=['GET'])
@@ -125,7 +193,13 @@ def call_next_patient():
 @app.route('/api/attendance/conclude', methods=['POST'])
 def conclude_attendance():
     """Conclui o atendimento de um paciente."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Content-Type deve ser application/json'}), 400
+    
     data = request.json
+    if not data:
+        return jsonify({'success': False, 'error': 'Dados JSON inválidos'}), 400
+    
     patient_id = data.get('patient_id')
     
     if patient_id is None:
@@ -162,24 +236,25 @@ def get_detailed_info():
 @app.route('/api/test/collision', methods=['POST'])
 def test_collision():
     """Teste de colisão na Hash."""
-    # Força IDs que colidem com capacidade 10
-    # IDs 5 e 15 colidem: 5 % 10 = 5, 15 % 10 = 5
-    hospital_service.next_patient_id = 5
+    # Garante que IDs 5, 15, 25 sejam limpos antes se já existirem
+    for pid in [5, 15, 25]:
+        if hospital_service.hash_table.contains(pid):
+            hospital_service.cancel_patient(pid)
     
+    # IDs 5, 15 e 25 colidem no mesmo bucket (ex: com capacidade 10, resto 5)
+    hospital_service.next_patient_id = 5
     patient1 = hospital_service.register_patient('Colisão ID 5', 3)
     
-    # Força ID 15 para colidir com ID 5
     hospital_service.next_patient_id = 15
     patient2 = hospital_service.register_patient('Colisão ID 15', 3)
     
-    # Força ID 25 para também colidir (25 % 10 = 5)
     hospital_service.next_patient_id = 25
     patient3 = hospital_service.register_patient('Colisão ID 25', 3)
     
     return jsonify({
         'success': True,
         'message': 'Criados pacientes com IDs 5, 15 e 25. Todos colidem no bucket 5 (capacidade 10)',
-        'patients': [patient1, patient2, patient3],
+        'patients': [patient1.get('patient'), patient2.get('patient'), patient3.get('patient')],
         'hash_buckets': hospital_service.hash_table.get_buckets_info()
     }), 200
 

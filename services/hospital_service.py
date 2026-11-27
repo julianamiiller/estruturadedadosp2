@@ -28,6 +28,8 @@ class HospitalService:
         
         # Rastreamento de atendimentos em andamento
         self.active_attendances = {}  # {patient_id: doctor_id}
+        # Registro completo de médicos {doctor_id: doctor_data}
+        self.doctors = {}
     
     def _generate_patient_id(self):
         """Gera um novo ID de paciente."""
@@ -58,6 +60,17 @@ class HospitalService:
         Returns:
             Dicionário com dados do paciente cadastrado ou erro
         """
+        # Validações de entrada
+        if not name or not isinstance(name, str):
+            return {'success': False, 'error': 'Nome inválido'}
+        
+        name = name.strip()
+        if len(name) < 2:
+            return {'success': False, 'error': 'Nome deve ter pelo menos 2 caracteres'}
+        
+        if not isinstance(priority, int):
+            return {'success': False, 'error': 'Prioridade deve ser um número inteiro'}
+        
         if priority < 1 or priority > 5:
             return {'success': False, 'error': 'Prioridade deve ser entre 1 e 5'}
         
@@ -112,6 +125,14 @@ class HospitalService:
         Returns:
             Dicionário com dados do médico cadastrado ou erro
         """
+        # Validações de entrada
+        if not name or not isinstance(name, str):
+            return {'success': False, 'error': 'Nome inválido'}
+        
+        name = name.strip()
+        if len(name) < 2:
+            return {'success': False, 'error': 'Nome deve ter pelo menos 2 caracteres'}
+        
         doctor_id = self._generate_doctor_id()
         registration_order = doctor_id  # Simplificado: usa ID como ordem
         
@@ -120,8 +141,11 @@ class HospitalService:
             'name': name,
             'completed_count': 0,
             'registration_order': registration_order,
-            'status': 'available'
+            'status': 'available',
+            'current_patient_id': None
         }
+        
+        self.doctors[doctor_id] = doctor_data
         
         # Inserção no heap de médicos
         heap_inserted = self.doctor_heap.insert_doctor(
@@ -143,7 +167,132 @@ class HospitalService:
         Returns:
             Dados do paciente ou None se não encontrado
         """
+        if not isinstance(patient_id, int) or patient_id <= 0:
+            return None
         return self.hash_table.get(patient_id)
+    
+    def find_patients_by_name(self, name):
+        """
+        Localiza pacientes por nome (busca parcial ou exata, case-insensitive).
+        
+        Args:
+            name: Nome ou trecho do nome do paciente
+            
+        Returns:
+            Lista de pacientes encontrados
+        """
+        if not name or not isinstance(name, str):
+            return []
+        
+        query = name.strip().lower()
+        if not query:
+            return []
+        
+        all_patients = self.hash_table.get_all_values()
+        matches = [p for p in all_patients if query in p.get('name', '').lower()]
+        return matches
+    
+    def search_patients(self, query):
+        """
+        Busca pacientes por ID ou por Nome.
+        
+        Args:
+            query: String ou número representando ID ou trecho do nome
+            
+        Returns:
+            Lista de pacientes correspondentes
+        """
+        if query is None:
+            return []
+        
+        query_str = str(query).strip()
+        if not query_str:
+            return []
+        
+        results = []
+        seen_ids = set()
+        
+        # Se for numérico, tenta buscar por ID na Hash primeiro (O(1))
+        if query_str.isdigit():
+            p_id = int(query_str)
+            patient = self.find_patient_by_id(p_id)
+            if patient:
+                results.append(patient)
+                seen_ids.add(patient['id'])
+        
+        # Busca também por nome
+        name_matches = self.find_patients_by_name(query_str)
+        for p in name_matches:
+            if p['id'] not in seen_ids:
+                results.append(p)
+                seen_ids.add(p['id'])
+        
+        return results
+    
+    def check_doctor_availability(self, doctor_identifier):
+        """
+        Verifica a disponibilidade de um médico específico (por ID ou Nome).
+        
+        Args:
+            doctor_identifier: ID (int/str) ou Nome (str) do médico
+            
+        Returns:
+            Dicionário com status detalhado do médico ou erro se não encontrado
+        """
+        if not doctor_identifier and doctor_identifier != 0:
+            return {'success': False, 'error': 'Identificador do médico é obrigatório'}
+        
+        target = None
+        doc_str = str(doctor_identifier).strip()
+        
+        if doc_str.isdigit():
+            target_id = int(doc_str)
+            target = self.doctors.get(target_id)
+        
+        if not target:
+            query = doc_str.lower()
+            for doc in self.doctors.values():
+                if doc['name'].lower() == query or query in doc['name'].lower():
+                    target = doc
+                    break
+        
+        if not target:
+            return {'success': False, 'error': f'Médico "{doctor_identifier}" não encontrado'}
+        
+        is_available = self.doctor_heap.contains(target['id']) and target.get('status') == 'available'
+        current_patient = None
+        if target.get('current_patient_id'):
+            current_patient = self.hash_table.get(target['current_patient_id'])
+        
+        return {
+            'success': True,
+            'doctor': target,
+            'is_available': is_available,
+            'status': 'available' if is_available else 'busy',
+            'current_patient': current_patient
+        }
+    
+    def get_all_doctors(self):
+        """Retorna lista de todos os médicos cadastrados com status e dados em tempo real."""
+        doctors_list = []
+        for doc in self.doctors.values():
+            is_available = self.doctor_heap.contains(doc['id']) and doc.get('status') == 'available'
+            current_patient = None
+            if doc.get('current_patient_id'):
+                current_patient = self.hash_table.get(doc['current_patient_id'])
+            
+            doctors_list.append({
+                'id': doc['id'],
+                'name': doc['name'],
+                'status': 'available' if is_available else 'busy',
+                'completed_count': doc.get('completed_count', 0),
+                'registration_order': doc.get('registration_order', 0),
+                'current_patient': current_patient
+            })
+        
+        # Ordena por ID
+        doctors_list.sort(key=lambda d: d['id'])
+        return doctors_list
     
     def reclassify_patient(self, patient_id, new_priority):
         """
@@ -156,12 +305,23 @@ class HospitalService:
         Returns:
             Dicionário com resultado da operação
         """
+        # Validações de entrada
+        if not isinstance(patient_id, int) or patient_id <= 0:
+            return {'success': False, 'error': 'ID do paciente inválido'}
+        
+        if not isinstance(new_priority, int):
+            return {'success': False, 'error': 'Prioridade deve ser um número inteiro'}
+        
         if new_priority < 1 or new_priority > 5:
             return {'success': False, 'error': 'Prioridade deve ser entre 1 e 5'}
         
         patient_data = self.hash_table.get(patient_id)
         if patient_data is None:
             return {'success': False, 'error': 'Paciente não encontrado'}
+        
+        # Verifica se paciente está em atendimento
+        if patient_id in self.active_attendances:
+            return {'success': False, 'error': 'Não é possível reclassificar paciente em atendimento'}
         
         # Atualiza na Hash
         patient_data['priority'] = new_priority
@@ -209,6 +369,10 @@ class HospitalService:
         # Atualiza status
         patient_data['status'] = 'in_attendance'
         doctor_data['status'] = 'busy'
+        doctor_data['current_patient_id'] = patient_id
+        if doctor_id in self.doctors:
+            self.doctors[doctor_id]['status'] = 'busy'
+            self.doctors[doctor_id]['current_patient_id'] = patient_id
         
         # Registra atendimento ativo
         self.active_attendances[patient_id] = doctor_id
@@ -232,8 +396,12 @@ class HospitalService:
         Returns:
             Dicionário com resultado da operação
         """
+        # Validações de entrada
+        if not isinstance(patient_id, int) or patient_id <= 0:
+            return {'success': False, 'error': 'ID do paciente inválido'}
+        
         if patient_id not in self.active_attendances:
-            return {'success': False, 'error': 'Atendimento não encontrado'}
+            return {'success': False, 'error': 'Atendimento não encontrado ou já concluído'}
         
         doctor_id = self.active_attendances[patient_id]
         
@@ -250,8 +418,18 @@ class HospitalService:
         tree_key = (patient_data['arrival_time'], patient_id)
         self.rb_tree.delete(tree_key)
         
-        # Incrementa contador do médico e reinsere no heap
-        self.doctor_heap.increment_completed(doctor_id)
+        # Incrementa contador do médico e reinsere no heap de disponíveis
+        if doctor_id in self.doctors:
+            doc = self.doctors[doctor_id]
+            doc['completed_count'] += 1
+            doc['status'] = 'available'
+            doc['current_patient_id'] = None
+            if self.doctor_heap.contains(doctor_id):
+                self.doctor_heap.update_priority(doctor_id, doc['completed_count'])
+            else:
+                self.doctor_heap.insert_doctor(doctor_id, doc, doc['completed_count'], doc['registration_order'])
+        else:
+            self.doctor_heap.increment_completed(doctor_id)
         
         # Remove do atendimento ativo
         del self.active_attendances[patient_id]
@@ -277,9 +455,17 @@ class HospitalService:
         Returns:
             Dicionário com resultado da operação
         """
+        # Validações de entrada
+        if not isinstance(patient_id, int) or patient_id <= 0:
+            return {'success': False, 'error': 'ID do paciente inválido'}
+        
         patient_data = self.hash_table.get(patient_id)
         if patient_data is None:
             return {'success': False, 'error': 'Paciente não encontrado'}
+        
+        # Se atendimento já foi concluído, não há o que cancelar nas filas
+        if patient_data.get('status') == 'completed':
+            return {'success': False, 'error': 'Não é possível cancelar paciente com atendimento já concluído'}
         
         # Se estiver em atendimento, não pode cancelar
         if patient_id in self.active_attendances:
@@ -354,9 +540,14 @@ class HospitalService:
         # A árvore usa tuplas (arrival_time, id), precisamos extrair só os IDs
         tree_ids = {key[1] for key in tree_keys}
         
-        # IDs na Hash devem estar na árvore e no heap (exceto os em atendimento)
-        waiting_in_hash = hash_keys - set(self.active_attendances.keys())
-        consistent_ids = waiting_in_hash == tree_ids == patient_heap_keys
+        # Valida consistência de IDs entre as estruturas
+        all_patients = self.hash_table.get_all_values()
+        waiting_ids = {p['id'] for p in all_patients if p.get('status') == 'waiting'}
+        active_and_waiting_ids = {p['id'] for p in all_patients if p.get('status') in ('waiting', 'in_attendance')}
+        
+        consistent_heap = waiting_ids == patient_heap_keys
+        consistent_tree = active_and_waiting_ids == tree_ids
+        consistent_ids = consistent_heap and consistent_tree
         
         return {
             'hash_valid': hash_valid,

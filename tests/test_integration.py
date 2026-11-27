@@ -228,12 +228,71 @@ def test_rollback_on_failure():
     print("✓ test_rollback_on_failure passou")
 
 
+def test_search_patient_by_name():
+    """Testa busca de pacientes por nome e por busca unificada."""
+    service = HospitalService()
+    service.register_patient('Carlos Silva', 2)
+    service.register_patient('Maria Souza', 1)
+    service.register_patient('Carlos Alberto', 3)
+    
+    # Busca por nome exato / parcial
+    carlos_matches = service.find_patients_by_name('carlos')
+    assert len(carlos_matches) == 2, "Deve encontrar 2 pacientes com Carlos"
+    
+    souza_matches = service.find_patients_by_name('Souza')
+    assert len(souza_matches) == 1, "Deve encontrar Maria Souza"
+    assert souza_matches[0]['name'] == 'Maria Souza'
+    
+    # Busca unificada por ID e nome
+    id_results = service.search_patients('2')
+    assert any(p['id'] == 2 for p in id_results), "Deve encontrar paciente de ID 2"
+    
+    print("✓ test_search_patient_by_name passou")
+
+
+def test_doctor_availability():
+    """Testa verificação de status e disponibilidade de médico específico."""
+    service = HospitalService()
+    doc1 = service.register_doctor('Dra. Ana Paula')
+    doc2 = service.register_doctor('Dr. Bruno Mendes')
+    doc1_id = doc1['doctor']['id']
+    doc2_id = doc2['doctor']['id']
+    
+    # Ambos devem estar disponíveis inicialmente
+    check1 = service.check_doctor_availability('Dra. Ana Paula')
+    assert check1['success'] == True
+    assert check1['is_available'] == True
+    assert check1['status'] == 'available'
+    
+    # Cadastra paciente e chama atendimento
+    service.register_patient('Paciente X', 1)
+    call_result = service.call_next_patient()
+    called_doc_id = call_result['doctor']['id']
+    
+    # Médico chamado deve estar ocupado
+    status_called = service.check_doctor_availability(called_doc_id)
+    assert status_called['is_available'] == False
+    assert status_called['status'] == 'busy'
+    assert status_called['current_patient']['name'] == 'Paciente X'
+    
+    # Conclui atendimento -> médico volta a ficar disponível
+    service.conclude_attendance(call_result['patient']['id'])
+    status_after = service.check_doctor_availability(called_doc_id)
+    assert status_after['is_available'] == True
+    assert status_after['status'] == 'available'
+    assert status_after['doctor']['completed_count'] == 1
+    
+    print("✓ test_doctor_availability passou")
+
+
 def run_all_integration_tests():
     """Executa todos os testes de integração."""
     print("\n=== Testes de Integração ===")
     test_register_patient()
     test_register_doctor()
     test_find_patient_by_id()
+    test_search_patient_by_name()
+    test_doctor_availability()
     test_reclassify_patient()
     test_call_next_patient()
     test_conclude_attendance()

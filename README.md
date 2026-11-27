@@ -1,111 +1,69 @@
-# Sistema de Gestão Hospitalar - Triagem e Atendimento
+# SIGAE — Sistema Integrado de Gestão e Atendimento Hospitalar
 
-## Descrição
-Sistema web para gestão hospitalar implementando estruturas de dados próprias:
-- **Tabela Hash** (1.0 ponto): Localização de pacientes por ID
-- **Árvore Rubro-Negra** (1.5 pontos): Ordenação por ordem de chegada
-- **2 Min-Heaps** (2.0 pontos): Priorização de pacientes e médicos
-- **Integração** (1.5 pontos): Sincronização entre estruturas
-- **Interface Web** (1.0 ponto): Interface completa de gestão
-- **Testes e Documentação** (1.0 ponto): Validação e apresentação
+O **SIGAE** é um sistema web desenvolvido para gerenciar o fluxo de triagem, filas de espera e atendimento médico em ambiente hospitalar. Todas as operações são executadas em memória utilizando estruturas de dados implementadas em Python, sem dependência de banco de dados externo.
 
-**Total: 8.0 pontos**
+## Funcionalidades
+
+- **Triagem e Classificação de Risco:** Cadastro de pacientes seguindo os 5 níveis do Protocolo de Manchester (1 = Emergência até 5 = Não Urgente), com suporte à reclassificação dinâmica de prioridade e cancelamento.
+- **Busca Unificada de Pacientes:** Localização rápida de prontuários por ID numérico ou por nome (busca exata ou parcial).
+- **Gestão do Corpo Clínico:** Cadastro de médicos no plantão, seleção automática do profissional com menor carga de atendimentos e consulta em tempo real da disponibilidade de qualquer médico (disponível ou em atendimento).
+- **Controle de Atendimento:** Chamada simultânea do paciente mais urgente e do médico mais disponível, acompanhamento do atendimento ativo e liberação automática do médico após a conclusão.
+- **Monitoramento de Filas e Estruturas:** Visualização em tempo real da fila por prioridade, da ordem cronológica de chegada e do estado interno da Tabela Hash, da Árvore Rubro-Negra e dos Min-Heaps.
+- **Validação de Integridade:** Verificação automática da consistência entre todas as estruturas em memória e simulação de colisões na Tabela Hash.
 
 ## Tecnologias
-- Python 3.x
-- Flask (backend)
-- HTML/CSS/JavaScript (frontend)
 
-## Estrutura do Projeto
-```
-garridop2/
+- **Backend:** Python 3.x, Flask e Flask-CORS
+- **Frontend:** HTML5, CSS3 e JavaScript
+
+## Arquitetura do Projeto
+
+```text
+estruturadedadosp2/
+├── app.py                     # API REST em Flask e servidor da interface web
+├── requirements.txt           # Dependências do projeto
 ├── structures/
-│   ├── hash_table.py      # Tabela Hash
-│   ├── red_black_tree.py  # Árvore Rubro-Negra
-│   └── min_heap.py        # Min-Heap (pacientes e médicos)
+│   ├── hash_table.py          # Tabela Hash com encadeamento e redimensionamento
+│   ├── red_black_tree.py      # Árvore Rubro-Negra para ordenação por chegada
+│   └── min_heap.py            # Min-Heaps indexados (pacientes e médicos)
 ├── services/
-│   └── hospital_service.py # Integração das estruturas
-├── api/
-│   └── app.py             # API Flask
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── app.js
+│   └── hospital_service.py    # Orquestração atômica e regras de negócio
 ├── templates/
-│   └── index.html
-├── tests/
-│   ├── test_hash.py
-│   ├── test_tree.py
-│   ├── test_heap.py
-│   └── test_integration.py
-├── requirements.txt
-└── README.md
+│   └── index.html             # Interface principal do sistema
+├── static/
+│   ├── css/style.css          # Estilos da aplicação
+│   └── js/app.js              # Lógica de interação no navegador
+└── tests/
+    ├── test_hash.py           # Testes da Tabela Hash
+    ├── test_tree.py           # Testes da Árvore Rubro-Negra
+    ├── test_heap.py           # Testes dos Min-Heaps
+    └── test_integration.py    # Testes de integração do sistema
 ```
-
-## Complexidade das Operações
-
-### Tabela Hash
-- **Inserir**: O(1) médio, O(n) pior caso (redimensionamento)
-- **Buscar**: O(1) médio, O(n) pior caso
-- **Remover**: O(1) médio, O(n) pior caso
-- **Redimensionamento**: O(n)
-
-### Árvore Rubro-Negra
-- **Inserir**: O(log n)
-- **Buscar**: O(log n)
-- **Remover**: O(log n)
-- **Percurso em ordem**: O(n)
-- **Validação**: O(n)
-
-### Min-Heap
-- **Inserir**: O(log n)
-- **Remover raiz**: O(log n)
-- **Alterar prioridade**: O(log n)
-- **Validação**: O(n)
 
 ## Como Executar
 
-1. Instalar dependências:
+1. Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Executar a aplicação:
+2. Inicie o servidor:
 ```bash
 python app.py
 ```
 
-3. Acessar: http://localhost:5000
+3. Acesse no navegador:
+```text
+http://localhost:5000
+```
 
 ## Testes
+
+Para validar as estruturas e os fluxos do sistema, execute:
+
 ```bash
 python tests/test_hash.py
 python tests/test_tree.py
 python tests/test_heap.py
 python tests/test_integration.py
 ```
-
-## Cenários de Teste
-
-### Teste A - Colisão
-Cadastrar dois IDs que caiam no mesmo bucket (ex: 5 e 15 com capacidade 10) e localizar os dois.
-
-### Teste B - Prioridade
-Reclassificar um paciente e mostrar quem vira a raiz do heap.
-
-### Teste C - Balanceamento
-Médicos com cargas diferentes, chamar pacientes e mostrar qual médico é escolhido.
-
-## Regras de Negócio
-
-- **Cadastrar**: ID único → Hash, Rubro-Negra, Heap
-- **Localizar**: Consulta pela Hash
-- **Reclassificar**: Altera prioridade no Heap sem duplicar
-- **Atender**: Remove raiz do heap de pacientes e do heap de médicos
-- **Concluir**: Contador do médico sobe, volta ao heap
-- **Listar**: Percurso em ordem da Rubro-Negra
-- **Cancelar**: Remove por ID das três estruturas
-
-## Consistência
-Todas as operações são atômicas. Se uma inserção falhar, rollback é aplicado. Não há registros órfãos nem duplicados.

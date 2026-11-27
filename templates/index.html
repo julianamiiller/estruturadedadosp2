@@ -3,181 +3,508 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão Hospitalar</title>
+    <title>SIGAE — Gestão Hospitalar e Estruturas de Dados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🏥 Sistema de Gestão Hospitalar</h1>
-            <p class="subtitle">Triagem e Atendimento com Estruturas de Dados</p>
-        </header>
-
-        <div class="main-content">
-            <!-- Painel de Cadastro de Pacientes -->
-            <section class="panel">
-                <h2>📋 Cadastro de Pacientes</h2>
-                <form id="patient-form">
-                    <div class="form-group">
-                        <label for="patient-name">Nome do Paciente:</label>
-                        <input type="text" id="patient-name" required placeholder="Digite o nome">
-                    </div>
-                    <div class="form-group">
-                        <label for="patient-priority">Prioridade (1-5):</label>
-                        <select id="patient-priority" required>
-                            <option value="1">1 - Emergência (Mais Urgente)</option>
-                            <option value="2">2 - Muito Urgente</option>
-                            <option value="3">3 - Urgente</option>
-                            <option value="4">4 - Pouco Urgente</option>
-                            <option value="5">5 - Não Urgente</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Cadastrar Paciente</button>
-                </form>
-            </section>
-
-            <!-- Painel de Cadastro de Médicos -->
-            <section class="panel">
-                <h2>👨‍⚕️ Cadastro de Médicos</h2>
-                <form id="doctor-form">
-                    <div class="form-group">
-                        <label for="doctor-name">Nome do Médico:</label>
-                        <input type="text" id="doctor-name" required placeholder="Digite o nome">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Cadastrar Médico</button>
-                </form>
-            </section>
-
-            <!-- Painel de Operações -->
-            <section class="panel">
-                <h2>⚙️ Operações</h2>
-                <div class="operations-grid">
-                    <div class="operation-group">
-                        <h3>Consulta por ID</h3>
-                        <div class="form-inline">
-                            <input type="number" id="search-id" placeholder="ID do paciente">
-                            <button onclick="searchPatient()" class="btn btn-secondary">Buscar</button>
-                        </div>
-                        <div id="search-result"></div>
-                    </div>
-                    <div class="operation-group">
-                        <h3>Reclassificar</h3>
-                        <div class="form-inline">
-                            <input type="number" id="reclassify-id" placeholder="ID do paciente">
-                            <select id="reclassify-priority">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
-                            <button onclick="reclassifyPatient()" class="btn btn-secondary">Reclassificar</button>
-                        </div>
-                    </div>
-                    <div class="operation-group">
-                        <h3>Cancelar</h3>
-                        <div class="form-inline">
-                            <input type="number" id="cancel-id" placeholder="ID do paciente">
-                            <button onclick="cancelPatient()" class="btn btn-danger">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Painel de Atendimento -->
-            <section class="panel">
-                <h2>🩺 Atendimento</h2>
-                <div class="attendance-controls">
-                    <button onclick="callNextPatient()" class="btn btn-success btn-large">Chamar Próximo Paciente</button>
-                    <div id="attendance-info"></div>
-                    <div class="conclude-section">
-                        <input type="number" id="conclude-id" placeholder="ID do paciente em atendimento">
-                        <button onclick="concludeAttendance()" class="btn btn-primary">Concluir Atendimento</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Painel de Visualização de Estruturas -->
-            <section class="panel full-width">
-                <h2>📊 Visualização das Estruturas de Dados</h2>
-                <div class="structures-grid">
-                    <!-- Tabela Hash -->
-                    <div class="structure-box">
-                        <h3>Tabela Hash</h3>
-                        <div class="stats">
-                            <span id="hash-size">Tamanho: 0</span>
-                            <span id="hash-capacity">Capacidade: 10</span>
-                            <span id="hash-load-factor">Fator de Carga: 0.00</span>
-                        </div>
-                        <div id="hash-buckets" class="buckets-container"></div>
-                    </div>
-
-                    <!-- Árvore Rubro-Negra -->
-                    <div class="structure-box">
-                        <h3>Árvore Rubro-Negra</h3>
-                        <div class="stats">
-                            <span id="tree-size">Tamanho: 0</span>
-                            <span id="tree-height">Altura Negra: 0</span>
-                        </div>
-                        <div id="tree-visualization" class="tree-container"></div>
-                    </div>
-
-                    <!-- Heap de Pacientes -->
-                    <div class="structure-box">
-                        <h3>Heap de Pacientes</h3>
-                        <div class="stats">
-                            <span id="patient-heap-size">Tamanho: 0</span>
-                        </div>
-                        <div id="patient-heap" class="heap-container"></div>
-                    </div>
-
-                    <!-- Heap de Médicos -->
-                    <div class="structure-box">
-                        <h3>Heap de Médicos</h3>
-                        <div class="stats">
-                            <span id="doctor-heap-size">Tamanho: 0</span>
-                        </div>
-                        <div id="doctor-heap" class="heap-container"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Painel de Listas -->
-            <section class="panel full-width">
-                <h2>📑 Listas</h2>
-                <div class="lists-grid">
-                    <div class="list-box">
-                        <h3>Fila por Prioridade</h3>
-                        <div id="priority-queue" class="list-container"></div>
-                    </div>
-                    <div class="list-box">
-                        <h3>Ordem de Chegada</h3>
-                        <div id="arrival-list" class="list-container"></div>
-                    </div>
-                    <div class="list-box">
-                        <h3>Médicos Disponíveis</h3>
-                        <div id="doctors-list" class="list-container"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Painel de Validação -->
-            <section class="panel">
-                <h2>✅ Validação e Testes</h2>
-                <div class="validation-controls">
-                    <button onclick="validateSystem()" class="btn btn-secondary">Validar Estruturas</button>
-                    <button onclick="testCollision()" class="btn btn-secondary">Teste de Colisão</button>
-                    <button onclick="resetSystem()" class="btn btn-danger">Resetar Sistema</button>
-                </div>
-                <div id="validation-result"></div>
-            </section>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+    
+    <!-- Modal Container for Details / Actions -->
+    <div id="modal-container" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Detalhes</h3>
+                <button class="modal-close-btn" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
         </div>
-
-        <footer>
-            <p>Sistema de Gestão Hospitalar - Estruturas de Dados</p>
-        </footer>
     </div>
 
+    <!-- Main App Shell -->
+    <div class="app-layout">
+        <!-- Top Executive Navbar -->
+        <header class="app-header">
+            <div class="header-branding">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                        <path d="M12 5v14"/>
+                        <path d="M5 12h14"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">SIGAE</h1>
+                    <p class="brand-subtitle">Sistema Integrado de Gestão e Atendimento Hospitalar</p>
+                </div>
+            </div>
+
+            <!-- Global Live Metrics -->
+            <div class="header-metrics">
+                <div class="metric-card">
+                    <div class="metric-icon metric-icon-patients">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Cadastrados</span>
+                        <span id="header-patient-count" class="metric-value">0</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon metric-icon-queue">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Fila de Espera</span>
+                        <span id="header-queue-count" class="metric-value">0</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon metric-icon-attending">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Em Atendimento</span>
+                        <span id="header-attendance-count" class="metric-value">0</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon metric-icon-doctors">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4.5c1.45-1.47 4.5-2 4.5-2"/></svg>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Médicos Disponíveis</span>
+                        <span id="header-doctor-count" class="metric-value">0</span>
+                    </div>
+                </div>
+
+                <div class="system-status-badge">
+                    <span class="status-dot pulse"></span>
+                    <span id="system-health-label">Online</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs-bar">
+            <button class="nav-tab active" data-tab="tab-operations" onclick="switchTab('tab-operations')">
+                <span class="tab-icon">⚡</span>
+                <span class="tab-text">Triagem & Atendimento</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-patient-search" onclick="switchTab('tab-patient-search')">
+                <span class="tab-icon">🔍</span>
+                <span class="tab-text">Buscar Paciente (Nome/ID)</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-doctors" onclick="switchTab('tab-doctors')">
+                <span class="tab-icon">👨‍⚕️</span>
+                <span class="tab-text">Corpo Clínico & Disponibilidade</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-queues" onclick="switchTab('tab-queues')">
+                <span class="tab-icon">📑</span>
+                <span class="tab-text">Filas & Monitor de Chamada</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-structures" onclick="switchTab('tab-structures')">
+                <span class="tab-icon">🧠</span>
+                <span class="tab-text">Estruturas de Dados</span>
+            </button>
+            <button class="nav-tab" data-tab="tab-tests" onclick="switchTab('tab-tests')">
+                <span class="tab-icon">🛡️</span>
+                <span class="tab-text">Diagnóstico & Testes</span>
+            </button>
+        </nav>
+
+        <!-- Main Body Panels -->
+        <main class="main-body">
+
+            <!-- TAB 1: TRIAGEM & ATENDIMENTO -->
+            <section id="tab-operations" class="tab-pane active">
+                <div class="grid-layout grid-2cols">
+                    
+                    <!-- Card: Cadastro de Pacientes -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-badge bg-rose-subtle">Triagem Manchester</span>
+                                <h2>📋 Recepção & Cadastro de Paciente</h2>
+                            </div>
+                        </div>
+                        <form id="patient-form" class="flow-form">
+                            <div class="form-group">
+                                <label for="patient-name">Nome Completo do Paciente</label>
+                                <div class="input-with-icon">
+                                    <span class="input-icon">👤</span>
+                                    <input type="text" id="patient-name" required placeholder="Ex: Maria Fernandes Silva" autocomplete="off">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="patient-priority">Classificação de Risco (Prioridade)</label>
+                                <select id="patient-priority" required class="select-priority">
+                                    <option value="1">🔴 Prioridade 1 — Emergência (Imediato • 0 min)</option>
+                                    <option value="2">🟠 Prioridade 2 — Muito Urgente (Até 10 min)</option>
+                                    <option value="3">🟡 Prioridade 3 — Urgente (Até 60 min)</option>
+                                    <option value="4">🟢 Prioridade 4 — Pouco Urgente (Até 120 min)</option>
+                                    <option value="5" selected>🔵 Prioridade 5 — Não Urgente (Até 240 min)</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block" id="btn-register-patient">
+                                <span class="btn-icon">✚</span>
+                                <span class="btn-text">Efetuar Triagem & Cadastrar</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Card: Painel de Chamada & Atendimento -->
+                    <div class="glass-card highlight-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-badge bg-emerald-subtle">Consultório Ativo</span>
+                                <h2>🩺 Central de Atendimento Médico</h2>
+                            </div>
+                        </div>
+
+                        <div class="call-action-box">
+                            <p class="section-description">
+                                A chamada automática extrai simultaneamente o <strong>paciente de maior prioridade</strong> (Min-Heap de Pacientes) e o <strong>médico mais disponível com menor carga</strong> (Min-Heap de Médicos).
+                            </p>
+                            
+                            <button onclick="callNextPatient()" class="btn btn-success btn-call-pulse" id="btn-call">
+                                <span class="btn-icon">📢</span>
+                                <span class="btn-text">CHAMAR PRÓXIMO PACIENTE</span>
+                            </button>
+                        </div>
+
+                        <!-- Active Attendance Display -->
+                        <div id="attendance-info" class="attendance-display empty">
+                            <div class="empty-state-micro">
+                                <span class="empty-icon">🩺</span>
+                                <span>Nenhum atendimento em curso no momento.</span>
+                            </div>
+                        </div>
+
+                        <!-- Conclude Attendance Section -->
+                        <div class="conclude-box">
+                            <label for="conclude-id">Finalizar Consulta:</label>
+                            <div class="input-action-group">
+                                <input type="number" id="conclude-id" placeholder="ID do Paciente atendido" min="1">
+                                <button onclick="concludeAttendance()" class="btn btn-accent" id="btn-conclude">
+                                    <span>Concluir</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card: Cadastro Rápido de Médico -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-badge bg-cyan-subtle">Escala de Plantão</span>
+                                <h2>👨‍⚕️ Cadastro de Médico no Plantão</h2>
+                            </div>
+                        </div>
+                        <form id="doctor-form" class="flow-form">
+                            <div class="form-group">
+                                <label for="doctor-name">Nome do Médico / Especialista</label>
+                                <div class="input-with-icon">
+                                    <span class="input-icon">🩺</span>
+                                    <input type="text" id="doctor-name" required placeholder="Ex: Dr. Roberto Guimarães" autocomplete="off">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-secondary btn-block" id="btn-register-doctor">
+                                <span class="btn-icon">✚</span>
+                                <span class="btn-text">Inserir Médico no Min-Heap de Plantão</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Card: Ações Rápidas de Gestão -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-badge bg-amber-subtle">Controle de Fila</span>
+                                <h2>⚙️ Reclassificação & Cancelamento</h2>
+                            </div>
+                        </div>
+
+                        <div class="quick-actions-grid">
+                            <!-- Reclassificar -->
+                            <div class="sub-action-card">
+                                <h4>Alterar Prioridade (Heap Update O(log n))</h4>
+                                <div class="form-inline-flex">
+                                    <input type="number" id="reclassify-id" placeholder="ID Paciente" min="1">
+                                    <select id="reclassify-priority">
+                                        <option value="1">P1 (Emergência)</option>
+                                        <option value="2">P2 (Muito Urg.)</option>
+                                        <option value="3">P3 (Urgente)</option>
+                                        <option value="4">P4 (Pouco Urg.)</option>
+                                        <option value="5">P5 (Não Urg.)</option>
+                                    </select>
+                                    <button onclick="reclassifyPatient()" class="btn btn-warning" id="btn-reclassify">
+                                        <span>Atualizar</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Cancelar -->
+                            <div class="sub-action-card">
+                                <h4>Cancelar / Desistência (Remoção das 3 Estruturas)</h4>
+                                <div class="form-inline-flex">
+                                    <input type="number" id="cancel-id" placeholder="ID Paciente" min="1">
+                                    <button onclick="cancelPatient()" class="btn btn-danger" id="btn-cancel">
+                                        <span>Cancelar Paciente</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- TAB 2: BUSCA DE PACIENTE (NOME OU ID) -->
+            <section id="tab-patient-search" class="tab-pane">
+                <div class="glass-card full-width">
+                    <div class="card-header space-between">
+                        <div>
+                            <span class="card-badge bg-cyan-subtle">Acesso Otimizado</span>
+                            <h2>🔍 Localização de Paciente por Nome ou ID</h2>
+                            <p class="section-description">
+                                Pesquise instantaneamente pacientes cadastrados na <strong>Tabela Hash</strong> por ID ou faça busca por <strong>Nome</strong> parcial ou completo.
+                            </p>
+                        </div>
+                        <div class="search-badge-count">
+                            <span id="search-count-label">0 pacientes listados</span>
+                        </div>
+                    </div>
+
+                    <!-- Search Input Bar -->
+                    <div class="search-hero-bar">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔎</span>
+                            <input type="text" id="unified-patient-search" placeholder="Digite o NOME completo/parcial ou o ID numérico do paciente..." autocomplete="off">
+                            <button class="clear-search-btn" id="btn-clear-search" onclick="clearPatientSearch()" title="Limpar busca">✕</button>
+                        </div>
+                        <button onclick="executePatientSearch()" class="btn btn-primary" id="btn-search-exec">
+                            <span>Buscar</span>
+                        </button>
+                        <button onclick="listAllPatients()" class="btn btn-outline" id="btn-list-all">
+                            <span>Ver Todos</span>
+                        </button>
+                    </div>
+
+                    <!-- Search Results Display Area -->
+                    <div id="patient-search-results" class="results-table-container">
+                        <div class="empty-state-large">
+                            <span class="empty-icon-large">🔎</span>
+                            <h3>Nenhuma busca realizada</h3>
+                            <p>Digite o nome ou ID acima para localizar o prontuário do paciente no sistema.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: CORPO CLÍNICO & DISPONIBILIDADE -->
+            <section id="tab-doctors" class="tab-pane">
+                <div class="glass-card full-width">
+                    <div class="card-header space-between">
+                        <div>
+                            <span class="card-badge bg-emerald-subtle">Monitor de Médicos</span>
+                            <h2>👨‍⚕️ Verificação de Disponibilidade do Médico Específico</h2>
+                            <p class="section-description">
+                                Verifique em tempo real se um médico específico está <strong>Disponível no Heap</strong> ou <strong>Ocupado em Atendimento</strong> com dados do paciente atual.
+                            </p>
+                        </div>
+                        <button onclick="refreshDoctorsRoster()" class="btn btn-outline btn-sm">
+                            <span>🔄 Atualizar Médicos</span>
+                        </button>
+                    </div>
+
+                    <!-- Search Doctor Specific Bar -->
+                    <div class="doctor-search-box">
+                        <label for="doctor-search-input">Consultar Médico Específico:</label>
+                        <div class="search-hero-bar">
+                            <div class="search-input-wrapper">
+                                <span class="search-icon">🩺</span>
+                                <input type="text" id="doctor-search-input" placeholder="Digite o Nome do médico (ex: Roberto) ou o ID..." autocomplete="off">
+                            </div>
+                            <button onclick="checkSpecificDoctor()" class="btn btn-primary" id="btn-check-doctor">
+                                <span>Verificar Disponibilidade</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Doctor Status Result Banner -->
+                    <div id="doctor-status-card" class="doctor-status-banner hidden"></div>
+
+                    <!-- All Doctors Roster Grid -->
+                    <div class="roster-header">
+                        <h3>Quadro Geral do Corpo Clínico</h3>
+                        <span class="text-muted" id="doctors-roster-count">0 médicos cadastrados</span>
+                    </div>
+
+                    <div id="doctors-roster-grid" class="doctors-grid">
+                        <div class="empty-state-large">
+                            <span class="empty-icon-large">👨‍⚕️</span>
+                            <p>Nenhum médico cadastrado na escala de plantão.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: FILAS & MONITOR -->
+            <section id="tab-queues" class="tab-pane">
+                <div class="grid-layout grid-2cols">
+                    
+                    <!-- Fila por Prioridade (Min-Heap) -->
+                    <div class="glass-card">
+                        <div class="card-header space-between">
+                            <div>
+                                <span class="card-badge bg-rose-subtle">Min-Heap de Pacientes</span>
+                                <h2>⚡ Fila por Prioridade</h2>
+                                <p class="card-caption">Ordenada pelo nível de gravidade (P1 a P5) e desempate por ordem de chegada.</p>
+                            </div>
+                            <span class="badge-counter" id="badge-heap-count">0</span>
+                        </div>
+                        <div id="priority-queue" class="stream-list-container"></div>
+                    </div>
+
+                    <!-- Ordem de Chegada (Árvore Rubro-Negra) -->
+                    <div class="glass-card">
+                        <div class="card-header space-between">
+                            <div>
+                                <span class="card-badge bg-cyan-subtle">Árvore Rubro-Negra</span>
+                                <h2>🕒 Ordem Cronológica de Chegada</h2>
+                                <p class="card-caption">Percurso In-Order O(n) na Árvore Rubro-Negra, mantendo histórico fiel.</p>
+                            </div>
+                            <span class="badge-counter" id="badge-tree-count">0</span>
+                        </div>
+                        <div id="arrival-list" class="stream-list-container"></div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- TAB 5: ESTRUTURAS DE DADOS -->
+            <section id="tab-structures" class="tab-pane">
+                <!-- Structure Sub-navigation -->
+                <div class="subtabs-bar">
+                    <button class="subtab-btn active" onclick="switchSubtab('sub-hash')">
+                        <span>#️⃣ Tabela Hash (O(1))</span>
+                    </button>
+                    <button class="subtab-btn" onclick="switchSubtab('sub-tree')">
+                        <span>🌳 Árvore Rubro-Negra (O(log n))</span>
+                    </button>
+                    <button class="subtab-btn" onclick="switchSubtab('sub-heap-patients')">
+                        <span>⚡ Min-Heap de Pacientes</span>
+                    </button>
+                    <button class="subtab-btn" onclick="switchSubtab('sub-heap-doctors')">
+                        <span>👨‍⚕️ Min-Heap de Médicos</span>
+                    </button>
+                </div>
+
+                <!-- Sub-tab: Hash Table -->
+                <div id="sub-hash" class="subtab-content active">
+                    <div class="glass-card full-width">
+                        <div class="structure-stats-strip">
+                            <div class="stat-pill"><span class="label">Elementos (n):</span> <strong id="hash-size">0</strong></div>
+                            <div class="stat-pill"><span class="label">Capacidade (m):</span> <strong id="hash-capacity">10</strong></div>
+                            <div class="stat-pill"><span class="label">Fator de Carga (α):</span> <strong id="hash-load-factor">0.00</strong></div>
+                            <div class="stat-pill"><span class="label">Função Hash:</span> <code>key % capacity</code></div>
+                            <div class="stat-pill"><span class="label">Tratamento de Colisão:</span> <strong>Encadeamento</strong></div>
+                        </div>
+                        <h3 class="box-title">Visualização dos Buckets & Encadeamento:</h3>
+                        <div id="hash-buckets" class="buckets-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Sub-tab: Red-Black Tree -->
+                <div id="sub-tree" class="subtab-content">
+                    <div class="glass-card full-width">
+                        <div class="structure-stats-strip">
+                            <div class="stat-pill"><span class="label">Nós na Árvore:</span> <strong id="tree-size">0</strong></div>
+                            <div class="stat-pill"><span class="label">Altura Negra (bh):</span> <strong id="tree-height">0</strong></div>
+                            <div class="stat-pill"><span class="label">Propriedades:</span> <strong>Auto-balanceada</strong></div>
+                            <div class="stat-pill"><span class="label">Chave de Busca:</span> <code>(arrival_time, id)</code></div>
+                        </div>
+                        <h3 class="box-title">Hierarquia de Nós Rubro-Negros:</h3>
+                        <div id="tree-visualization" class="tree-canvas"></div>
+                    </div>
+                </div>
+
+                <!-- Sub-tab: Patient Min-Heap -->
+                <div id="sub-heap-patients" class="subtab-content">
+                    <div class="glass-card full-width">
+                        <div class="structure-stats-strip">
+                            <div class="stat-pill"><span class="label">Tamanho do Heap:</span> <strong id="patient-heap-size">0</strong></div>
+                            <div class="stat-pill"><span class="label">Chave Primária:</span> <strong>Prioridade Manchester (1 a 5)</strong></div>
+                            <div class="stat-pill"><span class="label">Desempate:</span> <code>arrival_time, id</code></div>
+                            <div class="stat-pill"><span class="label">Operação:</span> <code>extract_min() O(log n)</code></div>
+                        </div>
+                        <h3 class="box-title">Array de Priorização do Min-Heap:</h3>
+                        <div id="patient-heap" class="heap-array-view"></div>
+                    </div>
+                </div>
+
+                <!-- Sub-tab: Doctor Min-Heap -->
+                <div id="sub-heap-doctors" class="subtab-content">
+                    <div class="glass-card full-width">
+                        <div class="structure-stats-strip">
+                            <div class="stat-pill"><span class="label">Médicos Disponíveis:</span> <strong id="doctor-heap-size">0</strong></div>
+                            <div class="stat-pill"><span class="label">Chave Primária:</span> <strong>Qtd. Atendimentos Concluídos</strong></div>
+                            <div class="stat-pill"><span class="label">Desempate:</span> <code>registration_order, id</code></div>
+                            <div class="stat-pill"><span class="label">Objetivo:</span> <strong>Balanceamento de Carga Justo</strong></div>
+                        </div>
+                        <h3 class="box-title">Fila de Disponibilidade por Menor Carga:</h3>
+                        <div id="doctor-heap" class="heap-array-view"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: DIAGNÓSTICO & TESTES -->
+            <section id="tab-tests" class="tab-pane">
+                <div class="glass-card full-width">
+                    <div class="card-header">
+                        <div>
+                            <span class="card-badge bg-rose-subtle">Bateria de Testes</span>
+                            <h2>🛡️ Validação de Integridade e Testes de Estruturas</h2>
+                            <p class="section-description">
+                                Verifique a consistência matemática e atômica entre as três estruturas de dados do projeto.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="test-controls-row">
+                        <button onclick="validateSystem()" class="btn btn-primary" id="btn-validate">
+                            <span class="btn-icon">✓</span>
+                            <span>Executar Validação de Consistência</span>
+                        </button>
+                        
+                        <button onclick="testCollision()" class="btn btn-secondary" id="btn-collision">
+                            <span class="btn-icon">⚡</span>
+                            <span>Demonstrar Teste de Colisão (IDs 5, 15, 25)</span>
+                        </button>
+                        
+                        <button onclick="confirmResetSystem()" class="btn btn-danger" id="btn-reset">
+                            <span class="btn-icon">🗑️</span>
+                            <span>Resetar Todo o Sistema</span>
+                        </button>
+                    </div>
+
+                    <div id="validation-result" class="validation-output-area"></div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
     <script src="/static/js/app.js"></script>
 </body>
 </html>
